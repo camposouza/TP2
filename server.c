@@ -13,8 +13,9 @@
 
 #define BUFSZ 1024
 
-#define servidorSE   0
-#define servidorSCII 1
+#define MAX_CLIENTS   10
+#define SERVIDOR_SE   0
+#define SERVIDOR_SCII 1
 
 void usage(int argc, char **argv) {
     printf("usage: %s <v4|v6> <server port>\n", argv[0]);
@@ -26,6 +27,9 @@ struct client_data {
     int csock;
     struct sockaddr_storage storage;
 };
+
+int client_count = 0;
+pthread_mutex_t client_count_mutex = PTHREAD_MUTEX_INITIALIZER;
 
 void * client_thread(void *data) {
     struct client_data *cdata = (struct client_data *)data;
@@ -47,6 +51,12 @@ void * client_thread(void *data) {
     }
     close(cdata->csock);
 
+    // Decrementa a contagem de clientes ao finalizar a conexão
+    pthread_mutex_lock(&client_count_mutex);
+    client_count--;
+    pthread_mutex_unlock(&client_count_mutex);
+
+    free(cdata);
     pthread_exit(EXIT_SUCCESS);
 }
 
@@ -76,10 +86,10 @@ int main(int argc, char **argv) {
     int dadoArmazenado;
     if (atoi(argv[2]) == 12345) {
         dadoArmazenado = geraProducaoSE();
-        tipoServidor = servidorSE;
+        tipoServidor = SERVIDOR_SE;
     } else {
         dadoArmazenado = geraConsumoSCII();
-        tipoServidor = servidorSCII;
+        tipoServidor = SERVIDOR_SCII;
     }
 
     struct sockaddr_storage storage;
@@ -121,19 +131,34 @@ int main(int argc, char **argv) {
             logexit("accept");
         }
 
-	struct client_data *cdata = malloc(sizeof(*cdata));
-	if (!cdata) {
-		logexit("malloc");
-	}
-	cdata->csock = csock;
-	memcpy(&(cdata->storage), &cstorage, sizeof(cstorage));
+        // Bloqueia o mutex antes de acessar e modificar a contagem de clientes
+        pthread_mutex_lock(&client_count_mutex);
+        if (client_count >= MAX_CLIENTS) {
+            close(csock);
+            printf("Número máximo de clientes atingido. Conexão recusada\n");
+        } else {
+            client_count++;
+            struct client_data *cdata = malloc(sizeof(*cdata));
+            if (!cdata) {
+                logexit("malloc");
+            }
+            cdata->csock = csock;
+            memcpy(&(cdata->storage), &cstorage, sizeof(cstorage));
 
-        pthread_t tid;
-        pthread_create(&tid, NULL, client_thread, cdata);
+            pthread_t tid;
+            pthread_create(&tid, NULL, client_thread, cdata);
+            pthread_detach(tid); // Detach da thread para que seus recursos sejam liberados automaticamente ao término
+        }
+        pthread_mutex_unlock(&client_count_mutex);
     }
-
+    
+    pthread_mutex_destroy(&client_count_mutex);  // Destroi o mutex ao finalizar o programa
     exit(EXIT_SUCCESS);
 }
+
+
+
+
 
 int geraProducaoSE() {
     int min = 20;
