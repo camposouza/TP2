@@ -9,7 +9,12 @@
 #include <sys/socket.h>
 #include <sys/types.h>
 
+#include <time.h>
+
 #define BUFSZ 1024
+
+#define servidorSE   0
+#define servidorSCII 1
 
 void usage(int argc, char **argv) {
     printf("usage: %s <v4|v6> <server port>\n", argv[0]);
@@ -45,9 +50,36 @@ void * client_thread(void *data) {
     pthread_exit(EXIT_SUCCESS);
 }
 
+/**
+ * @brief Gera valor aleatorio de Producao de Energia Eletrica = [20,50] MWh
+ * 
+ * @return int 
+ */
+int geraProducaoSE();
+
+/**
+ * @brief Gera valor aleatorio de Consumo Elétrico = [20,100]%
+ * 
+ * @return int 
+ */
+int geraConsumoSCII();
+
+
 int main(int argc, char **argv) {
+    /* Inicializando servidor */
     if (argc < 3) {
         usage(argc, argv);
+    }
+
+    // Definindo servidor SE ou SCII
+    int tipoServidor;
+    int dadoArmazenado;
+    if (atoi(argv[2]) == 12345) {
+        dadoArmazenado = geraProducaoSE();
+        tipoServidor = servidorSE;
+    } else {
+        dadoArmazenado = geraConsumoSCII();
+        tipoServidor = servidorSCII;
     }
 
     struct sockaddr_storage storage;
@@ -101,4 +133,20 @@ int main(int argc, char **argv) {
     }
 
     exit(EXIT_SUCCESS);
+}
+
+int geraProducaoSE() {
+    int min = 20;
+    int max = 50;
+
+    int producao = rand() % (max - min + 1) + min;
+    return producao;
+}
+
+int geraConsumoSCII() {
+    int min = 0;
+    int max = 100;
+
+    int consumo = rand() % (max - min + 1);
+    return consumo;
 }
