@@ -52,26 +52,24 @@ int main(int argc, char **argv) {
     }
     puts(buf);
 	
-	// Envia mensagem para o servidor
-    memset(buf, 0, BUFSZ);
-    printf("mensagem> ");
-    fgets(buf, BUFSZ - 1, stdin);
-    size_t msg_len = strlen(buf);
-    if (send(s, buf, msg_len, 0) != msg_len) {
-        logexit("send");
-    }
+    while (1) {
+        printf("mensagem> ");
+        fgets(buf, BUFSZ - 1, stdin);
+        size_t msg_len = strlen(buf);
+        if (send(s, buf, msg_len, 0) != msg_len) {
+            logexit("send");
+        }
 
-	// Recebe resposta do servidor
-	memset(buf, 0, BUFSZ);
-	unsigned total = 0;
-	while(1) {
-		count = recv(s, buf + total, BUFSZ - total, 0);
-		if (count == 0) {
-			// Connection terminated.
-			break;
-		}
-		total += count;
-	}
+        // Recebe a resposta do servidor (se houver)
+        count = recv(s, buf, BUFSZ - 1, 0);
+        if (count < 0) {
+            logexit("recv");
+        } else if (count == 0) {
+            printf("Connection closed by server\n");
+            break;
+        }
+        puts(buf);
+    }
 
     close(s);
 
