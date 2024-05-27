@@ -26,10 +26,13 @@ void usage(int argc, char **argv) {
 struct client_data {
     int csock;
     struct sockaddr_storage storage;
+    int client_id; // ID do cliente
 };
 
 int client_count = 0;
+int next_client_id = 1; // Próximo ID disponível
 pthread_mutex_t client_count_mutex = PTHREAD_MUTEX_INITIALIZER;
+pthread_mutex_t client_id_mutex = PTHREAD_MUTEX_INITIALIZER;
 
 void * client_thread(void *data) {
     struct client_data *cdata = (struct client_data *)data;
@@ -60,36 +63,10 @@ void * client_thread(void *data) {
     pthread_exit(EXIT_SUCCESS);
 }
 
-/**
- * @brief Gera valor aleatorio de Producao de Energia Eletrica = [20,50] MWh
- * 
- * @return int 
- */
-int geraProducaoSE();
-
-/**
- * @brief Gera valor aleatorio de Consumo Elétrico = [20,100]%
- * 
- * @return int 
- */
-int geraConsumoSCII();
-
-
 int main(int argc, char **argv) {
     /* Inicializando servidor */
     if (argc < 3) {
         usage(argc, argv);
-    }
-
-    // Definindo servidor SE ou SCII
-    int tipoServidor;
-    int dadoArmazenado;
-    if (atoi(argv[2]) == 12345) {
-        dadoArmazenado = geraProducaoSE();
-        tipoServidor = SERVIDOR_SE;
-    } else {
-        dadoArmazenado = geraConsumoSCII();
-        tipoServidor = SERVIDOR_SCII;
     }
 
     struct sockaddr_storage storage;
@@ -145,6 +122,13 @@ int main(int argc, char **argv) {
             cdata->csock = csock;
             memcpy(&(cdata->storage), &cstorage, sizeof(cstorage));
 
+            // Atribui um ID único ao cliente
+            pthread_mutex_lock(&client_id_mutex);
+            cdata->client_id = next_client_id++;
+            pthread_mutex_unlock(&client_id_mutex);
+
+            printf("Cliente ID: %d\n", cdata->client_id);
+
             pthread_t tid;
             pthread_create(&tid, NULL, client_thread, cdata);
             pthread_detach(tid); // Detach da thread para que seus recursos sejam liberados automaticamente ao término
@@ -152,26 +136,7 @@ int main(int argc, char **argv) {
         pthread_mutex_unlock(&client_count_mutex);
     }
     
-    pthread_mutex_destroy(&client_count_mutex);  // Destroi o mutex ao finalizar o programa
+    pthread_mutex_destroy(&client_count_mutex);
+    pthread_mutex_destroy(&client_id_mutex);
     exit(EXIT_SUCCESS);
-}
-
-
-
-
-
-int geraProducaoSE() {
-    int min = 20;
-    int max = 50;
-
-    int producao = rand() % (max - min + 1) + min;
-    return producao;
-}
-
-int geraConsumoSCII() {
-    int min = 0;
-    int max = 100;
-
-    int consumo = rand() % (max - min + 1);
-    return consumo;
 }
