@@ -65,7 +65,7 @@ void * client_thread_SE(void *data) {
         }
         printf("[msg] %s, %d bytes: %s\n", caddrstr, (int)count, buf);
 
-        const char *response = "Received your message!";
+        const char *response = "Received your message!\n";
         send(cdata->csock, response, strlen(response), 0);
     }
     close(cdata->csock);
@@ -110,7 +110,7 @@ void * client_thread_SCII(void *data) {
         }
         printf("[msg] %s, %d bytes: %s\n", caddrstr, (int)count, buf);
 
-        const char *response = "Received your message!";
+        const char *response = "Received your message!\n";
         send(cdata->csock, response, strlen(response), 0);
     }
     close(cdata->csock);

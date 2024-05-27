@@ -85,14 +85,22 @@ int main(int argc, char **argv) {
     puts(buf_SCII);
 	
     while (1) {
-		/* ---------- Troca de mensagens com Servidor SE ---------- */
+		// Input mensagem
+		char buf[BUFSZ];
         printf("mensagem> ");
-        fgets(buf_SE, BUFSZ - 1, stdin);
-        size_t msg_len_SE = strlen(buf_SE);
-        if (send(s_SE, buf_SE, msg_len_SE, 0) != msg_len_SE) {
+        fgets(buf, BUFSZ - 1, stdin);
+		size_t msg_len = strlen(buf);
+
+		// Enviando mensagem para servidor SE
+        if (send(s_SE, buf, msg_len, 0) != msg_len) {
+            logexit("send");
+        }
+		// Enviando mensagem para servidor SCII
+		if (send(s_SCII, buf, msg_len, 0) != msg_len) {
             logexit("send");
         }
 
+		// Recebendo resposta servidor SE
         count_SE = recv(s_SE, buf_SE, BUFSZ - 1, 0);
         if (count_SE < 0) {
             logexit("recv");
@@ -102,15 +110,7 @@ int main(int argc, char **argv) {
         }
         puts(buf_SE);
 
-
-		/* ---------- Troca de mensagens com Servidor SCII ---------- */
-        printf("mensagem> ");
-        fgets(buf_SCII, BUFSZ - 1, stdin);
-        size_t msg_len_SCII = strlen(buf_SCII);
-        if (send(s_SCII, buf_SCII, msg_len_SCII, 0) != msg_len_SCII) {
-            logexit("send");
-        }
-
+		// Recebendo resposta servidor SCII
         count_SCII = recv(s_SCII, buf_SCII, BUFSZ - 1, 0);
         if (count_SCII < 0) {
             logexit("recv");
