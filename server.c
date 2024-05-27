@@ -68,13 +68,6 @@ void * client_thread_SE(void *data) {
         const char *response = "Received your message!";
         send(cdata->csock, response, strlen(response), 0);
     }
-    
-    // sprintf(buf, "remote endpoint: %.1000s\n", caddrstr);
-    // count = send(cdata->csock, buf, strlen(buf) + 1, 0);
-    // if (count != strlen(buf) + 1) {
-    //     logexit("send");
-    // }
-
     close(cdata->csock);
 
     // Decrementa a contagem de clientes ao finalizar a conexão
@@ -83,7 +76,6 @@ void * client_thread_SE(void *data) {
     pthread_mutex_unlock(&client_count_mutex);
 
     free(cdata);
-    
     pthread_exit(EXIT_SUCCESS);
 }
 
@@ -104,15 +96,22 @@ void * client_thread_SCII(void *data) {
         perror("send");
     }
 
-    char buf[BUFSZ];
-    memset(buf, 0, BUFSZ);
-    size_t count = recv(cdata->csock, buf, BUFSZ - 1, 0);
-    printf("[msg] %s, %d bytes: %s\n", caddrstr, (int)count, buf);
+    while(1) {
+        char buf[BUFSZ];
+        memset(buf, 0, BUFSZ);
+        size_t count = recv(cdata->csock, buf, BUFSZ - 1, 0);
+        if (count == -1) {
+            perror("recv");
+            break; // Encerra a comunicação em caso de erro
+        } else if (count == 0) {
+            // Cliente desconectado
+            printf("[log] Client disconnected: %s\n", caddrstr);
+            break;
+        }
+        printf("[msg] %s, %d bytes: %s\n", caddrstr, (int)count, buf);
 
-    sprintf(buf, "remote endpoint: %.1000s\n", caddrstr);
-    count = send(cdata->csock, buf, strlen(buf) + 1, 0);
-    if (count != strlen(buf) + 1) {
-        logexit("send");
+        const char *response = "Received your message!";
+        send(cdata->csock, response, strlen(response), 0);
     }
     close(cdata->csock);
 
