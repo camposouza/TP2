@@ -29,18 +29,65 @@ struct client_data {
     int client_id; // ID do cliente
 };
 
+
 int client_count = 0;
-int next_client_id = 1; // Próximo ID disponível
+int next_client_id = 1; // Proximo ID disponível
 pthread_mutex_t client_count_mutex = PTHREAD_MUTEX_INITIALIZER;
 pthread_mutex_t client_id_mutex = PTHREAD_MUTEX_INITIALIZER;
 
-void * client_thread(void *data) {
+void * client_thread_SE(void *data) {
     struct client_data *cdata = (struct client_data *)data;
     struct sockaddr *caddr = (struct sockaddr *)(&cdata->storage);
 
     char caddrstr[BUFSZ];
     addrtostr(caddr, caddrstr, BUFSZ);
     printf("[log] connection from %s\n", caddrstr);
+
+    /* Mensagem de boas vindas para o cliente */ 
+    char msg[BUFSZ];
+    snprintf(msg, BUFSZ, "Servidor SE New ID: %d\n", cdata->client_id);
+    size_t msg_len = strlen(msg);
+    if (send(cdata->csock, msg, msg_len, 0) != msg_len) {
+        perror("send");
+    }
+
+    char buf[BUFSZ];
+    memset(buf, 0, BUFSZ);
+    size_t count = recv(cdata->csock, buf, BUFSZ - 1, 0);
+    printf("[msg] %s, %d bytes: %s\n", caddrstr, (int)count, buf);
+
+    sprintf(buf, "remote endpoint: %.1000s\n", caddrstr);
+    count = send(cdata->csock, buf, strlen(buf) + 1, 0);
+    if (count != strlen(buf) + 1) {
+        logexit("send");
+    }
+    close(cdata->csock);
+
+    // Decrementa a contagem de clientes ao finalizar a conexão
+    pthread_mutex_lock(&client_count_mutex);
+    client_count--;
+    pthread_mutex_unlock(&client_count_mutex);
+
+    free(cdata);
+    pthread_exit(EXIT_SUCCESS);
+}
+
+
+void * client_thread_SCII(void *data) {
+    struct client_data *cdata = (struct client_data *)data;
+    struct sockaddr *caddr = (struct sockaddr *)(&cdata->storage);
+
+    char caddrstr[BUFSZ];
+    addrtostr(caddr, caddrstr, BUFSZ);
+    printf("[log] connection from %s\n", caddrstr);
+
+    /* Mensagem de boas vindas para o cliente */ 
+    char msg[BUFSZ];
+    snprintf(msg, BUFSZ, "Servidor SCII New ID: %d\n", cdata->client_id);
+    size_t msg_len = strlen(msg);
+    if (send(cdata->csock, msg, msg_len, 0) != msg_len) {
+        perror("send");
+    }
 
     char buf[BUFSZ];
     memset(buf, 0, BUFSZ);
@@ -112,7 +159,7 @@ int main(int argc, char **argv) {
         pthread_mutex_lock(&client_count_mutex);
         if (client_count >= MAX_CLIENTS) {
             close(csock);
-            printf("Número máximo de clientes atingido. Conexão recusada\n");
+            printf("Client limit exceeded\n");
         } else {
             client_count++;
             struct client_data *cdata = malloc(sizeof(*cdata));
@@ -127,11 +174,17 @@ int main(int argc, char **argv) {
             cdata->client_id = next_client_id++;
             pthread_mutex_unlock(&client_id_mutex);
 
-            printf("Cliente ID: %d\n", cdata->client_id);
+            printf("Client %d added\n", cdata->client_id);
 
             pthread_t tid;
-            pthread_create(&tid, NULL, client_thread, cdata);
-            pthread_detach(tid); // Detach da thread para que seus recursos sejam liberados automaticamente ao término
+            if (atoi(argv[2]) == 12345) {
+                pthread_create(&tid, NULL, client_thread_SE, cdata);
+                pthread_detach(tid);
+            }
+            if (atoi(argv[2]) == 54321) {
+                pthread_create(&tid, NULL, client_thread_SCII, cdata);
+                pthread_detach(tid);
+            }
         }
         pthread_mutex_unlock(&client_count_mutex);
     }

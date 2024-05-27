@@ -43,14 +43,25 @@ int main(int argc, char **argv) {
 	printf("connected to %s\n", addrstr);
 
 	char buf[BUFSZ];
-	memset(buf, 0, BUFSZ);
-	printf("mensagem> ");
-	fgets(buf, BUFSZ-1, stdin);
-	size_t count = send(s, buf, strlen(buf)+1, 0);
-	if (count != strlen(buf)+1) {
-		logexit("send");
-	}
+	// Recebe a mensagem do servidor com respectivo ID_CLIENT
+    size_t count = recv(s, buf, BUFSZ - 1, 0);
+    if (count < 0) {
+        logexit("recv");
+    } else if (count == 0) {
+        logexit("Connection closed by server");
+    }
+    puts(buf);
+	
+	// Envia mensagem para o servidor
+    memset(buf, 0, BUFSZ);
+    printf("mensagem> ");
+    fgets(buf, BUFSZ - 1, stdin);
+    size_t msg_len = strlen(buf);
+    if (send(s, buf, msg_len, 0) != msg_len) {
+        logexit("send");
+    }
 
+	// Recebe resposta do servidor
 	memset(buf, 0, BUFSZ);
 	unsigned total = 0;
 	while(1) {
@@ -61,10 +72,8 @@ int main(int argc, char **argv) {
 		}
 		total += count;
 	}
-	close(s);
 
-	printf("received %u bytes\n", total);
-	puts(buf);
+    close(s);
 
-	exit(EXIT_SUCCESS);
+    exit(EXIT_SUCCESS);
 }
