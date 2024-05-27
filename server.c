@@ -41,7 +41,6 @@ void * client_thread_SE(void *data) {
 
     char caddrstr[BUFSZ];
     addrtostr(caddr, caddrstr, BUFSZ);
-    printf("[log] connection from %s\n", caddrstr);
 
     /* Mensagem de boas vindas para o cliente */ 
     char msg[BUFSZ];
@@ -65,8 +64,15 @@ void * client_thread_SE(void *data) {
         }
         printf("[msg] %s, %d bytes: %s\n", caddrstr, (int)count, buf);
 
-        const char *response = "Received your message!\n";
-        send(cdata->csock, response, strlen(response), 0);
+        if(strcmp(buf, "kill\n") == 0 ) {
+            printf("Servidor SE Client %d removed\n", cdata->client_id);
+            const char *response = "Successful disconnect!\n";
+            send(cdata->csock, response, strlen(response), 0);
+            break;
+        } else {
+            const char *response = "Received your message!\n";
+            send(cdata->csock, response, strlen(response), 0);
+        }
     }
     close(cdata->csock);
 
@@ -86,7 +92,6 @@ void * client_thread_SCII(void *data) {
 
     char caddrstr[BUFSZ];
     addrtostr(caddr, caddrstr, BUFSZ);
-    printf("[log] connection from %s\n", caddrstr);
 
     /* Mensagem de boas vindas para o cliente */ 
     char msg[BUFSZ];
@@ -110,8 +115,15 @@ void * client_thread_SCII(void *data) {
         }
         printf("[msg] %s, %d bytes: %s\n", caddrstr, (int)count, buf);
 
-        const char *response = "Received your message!\n";
-        send(cdata->csock, response, strlen(response), 0);
+        if(strcmp(buf, "kill\n") == 0 ) {
+            printf("Servidor SCII Client %d removed\n", cdata->client_id);
+            const char *response = "Successful disconnect!\n";
+            send(cdata->csock, response, strlen(response), 0);
+            break;
+        } else {
+            const char *response = "Received your message!\n";
+            send(cdata->csock, response, strlen(response), 0);
+        }
     }
     close(cdata->csock);
 

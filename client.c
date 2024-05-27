@@ -9,6 +9,8 @@
 #include <sys/socket.h>
 #include <arpa/inet.h>
 
+#include <stdbool.h>
+
 void usage(int argc, char **argv) {
 	printf("usage: %s <server IP> <server port 1> <server port 2>\n", argv[0]);
 	printf("example: %s 127.0.0.1 12345 54321\n", argv[0]);
@@ -23,6 +25,7 @@ int main(int argc, char **argv) {
 	}
 
 	/* ---------- Conexao com Servidor SE ---------- */
+	bool close_SE = false;
 	struct sockaddr_storage storage_SE;
 	if (0 != addrparse(argv[1], argv[2], &storage_SE)) {
 		usage(argc, argv);
@@ -41,7 +44,6 @@ int main(int argc, char **argv) {
 	char addrstr_SE[BUFSZ];
 	addrtostr(addr_SE, addrstr_SE, BUFSZ);
 
-	printf("connected to %s\n", addrstr_SE);
 
 	char buf_SE[BUFSZ];
 	// Recebe a mensagem do servidor com respectivo ID_CLIENT
@@ -54,6 +56,7 @@ int main(int argc, char **argv) {
     puts(buf_SE);
 
 	/* ---------- Conexao com Servidor SCII ----------*/
+	bool close_SCII = false;
 	struct sockaddr_storage storage_SCII;
 	if (0 != addrparse(argv[1], argv[3], &storage_SCII)) {
 		usage(argc, argv);
@@ -72,7 +75,6 @@ int main(int argc, char **argv) {
 	char addrstr_SCII[BUFSZ];
 	addrtostr(addr_SCII, addrstr_SCII, BUFSZ);
 
-	printf("connected to %s\n", addrstr_SCII);
 
 	char buf_SCII[BUFSZ];
 	// Recebe a mensagem do servidor com respectivo ID_CLIENT
@@ -108,7 +110,12 @@ int main(int argc, char **argv) {
             printf("Connection closed by server\n");
             break;
         }
-        puts(buf_SE);
+		if (strcmp(buf_SE, "Successful disconnect!\n") == 0) {
+			close_SE = true;
+		} else {
+			puts(buf_SE);
+		}
+
 
 		// Recebendo resposta servidor SCII
         count_SCII = recv(s_SCII, buf_SCII, BUFSZ - 1, 0);
@@ -118,7 +125,14 @@ int main(int argc, char **argv) {
             printf("Connection closed by server\n");
             break;
         }
-        puts(buf_SCII);
+
+		if (strcmp(buf_SCII, "Successful disconnect!\n") == 0) {
+			close_SCII = true;
+		} else {
+			puts(buf_SCII);
+		}
+
+		if (close_SE || close_SCII) { break; }
     }
 
     close(s_SE);
