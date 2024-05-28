@@ -184,6 +184,8 @@ int main(int argc, char **argv) {
         // Bloqueia o mutex antes de acessar e modificar a contagem de clientes
         pthread_mutex_lock(&client_count_mutex);
         if (client_count >= MAX_CLIENTS) {
+            const char *response = "Client limit exceeded\n";
+            send(csock, response, strlen(response), 0);
             close(csock);
             printf("Client limit exceeded\n");
         } else {
