@@ -33,8 +33,7 @@ void usage(int argc, char **argv) {
  */
 int geraProducaoSE() {
     srand(time(NULL));
-    //return (rand() % 31) + 20;
-    return 10;
+    return (rand() % 31) + 20;
 }
 
 /**
@@ -129,17 +128,24 @@ void * client_thread_SE(void *data) {
             memset(response, 0, BUFSZ);
             snprintf(response, BUFSZ, "producao atual: %d kWh", producao);
             send(cdata->csock, response, strlen(response)+1, 0);
+
         }else if(strcmp(buf, "query condition\n") == 0) {
             printf("REQ_STATUS\n");
             if(producao >= 41) {
+                producao = geraProducaoSE(); // Gera novo valor aleatorio de producao
+
                 memset(response, 0, BUFSZ);
                 snprintf(response, BUFSZ, "estado atual: alta");
                 send(cdata->csock, response, strlen(response)+1, 0);
             } else if(producao >= 31){
+                producao = geraProducaoSE(); // Gera novo valor aleatorio de producao
+
                 memset(response, 0, BUFSZ);
                 snprintf(response, BUFSZ, "estado atual: moderada");
                 send(cdata->csock, response, strlen(response)+1, 0);
             } else {
+                producao = geraProducaoSE(); // Gera novo valor aleatorio de producao
+                
                 memset(response, 0, BUFSZ);
                 snprintf(response, BUFSZ, "estado atual: baixa");
                 send(cdata->csock, response, strlen(response)+1, 0);
