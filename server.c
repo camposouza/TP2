@@ -89,19 +89,31 @@ void * client_thread_SE(void *data) {
 
         if(strcmp(buf, "kill\n") == 0 ) {
             printf("Servidor SE Client %d removed\n", cdata->client_id);
-            const char *response = "Successful disconnect!\n";
-            send(cdata->csock, response, strlen(response), 0);
+            const char *response_kill = "Successful disconnect!\n";
+            send(cdata->csock, response_kill, strlen(response_kill), 0);
             break;
         } else if(strcmp(buf, "display info se\n") == 0 ) {
             printf("REQ_INFOSE\n");
             printf("REQ_INFOSE %d\n", producao);
-            char response[BUFSZ];
-            snprintf(response, BUFSZ, "producao atual: %d kWh\n", producao);
-            size_t response_len = strlen(response);
-            send(cdata->csock, response, response_len, 0);
+            char response_info[BUFSZ];
+            snprintf(response_info, BUFSZ, "producao atual: %d kWh\n", producao);
+            size_t response_info_len = strlen(response_info);
+            send(cdata->csock, response_info, response_info_len, 0);
+        }else if(strcmp(buf, "query condition\n") == 0) {
+            printf("REQ_STATUS\n");
+            if(producao >= 41) {
+                const char *response_status_1 = "estado atual: alta!\n";
+                send(cdata->csock, response_status_1, strlen(response_status_1), 0);
+            } else if(producao >= 31){
+                const char *response_status_2 = "estado atual: moderada!\n";
+                send(cdata->csock, response_status_2, strlen(response_status_2), 0);
+            } else {
+                const char *response_status_3 = "estado atual: baixa!\n";
+                send(cdata->csock, response_status_3, strlen(response_status_3), 0);
+            }
         } else {
-            const char *response = "Received your message!\n";
-            send(cdata->csock, response, strlen(response), 0);
+            const char *response_other = "Received your message!\n";
+            send(cdata->csock, response_other, strlen(response_other), 0);
         }
     }
     close(cdata->csock);
@@ -147,19 +159,19 @@ void * client_thread_SCII(void *data) {
 
         if(strcmp(buf, "kill\n") == 0 ) {
             printf("Servidor SCII Client %d removed\n", cdata->client_id);
-            const char *response = "Successful disconnect!\n";
-            send(cdata->csock, response, strlen(response), 0);
+            const char *response_kill = "Successful disconnect!\n";
+            send(cdata->csock, response_kill, strlen(response_kill), 0);
             break;
         } else if(strcmp(buf, "display info scii\n") == 0 ) {
             printf("REQ_INFOSCII\n");
             printf("REQ_INFOSCII %d%%\n", consumo);
-            char response[BUFSZ];
-            snprintf(response, BUFSZ, "producao atual: %d%% kWh\n", consumo);
-            size_t response_len = strlen(response);
-            send(cdata->csock, response, response_len, 0);
+            char response_info[BUFSZ];
+            snprintf(response_info, BUFSZ, "producao atual: %d%% kWh\n", consumo);
+            size_t response_info_len = strlen(response_info);
+            send(cdata->csock, response_info, response_info_len, 0);
         } else {
-            const char *response = "Received your message!\n";
-            send(cdata->csock, response, strlen(response), 0);
+            const char *response_others = "Received your message!\n";
+            send(cdata->csock, response_others, strlen(response_others), 0);
         }
     }
     close(cdata->csock);
