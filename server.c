@@ -17,10 +17,33 @@
 #define SERVIDOR_SE   0
 #define SERVIDOR_SCII 1
 
+int producao; // Dado do Servidor SE
+int consumo;  // Dado do Servidor SCII
+
 void usage(int argc, char **argv) {
     printf("usage: %s <v4|v6> <server port>\n", argv[0]);
     printf("example: %s v4 51511\n", argv[0]);
     exit(EXIT_FAILURE);
+}
+
+/**
+ * @brief Gera valor aleatorio de Producao de Energia Eletrica = [20,50] MWh
+ * 
+ * @return int 
+ */
+int geraProducaoSE() {
+    srand(time(NULL));
+    return (rand() % 31) + 20;
+}
+
+/**
+ * @brief Gera valor aleatorio de Consumo Elétrico = [20,100]%
+ * 
+ * @return int 
+ */
+int geraConsumoSCII() {
+    srand(time(NULL));
+    return (rand() % 101);
 }
 
 struct client_data {
@@ -69,6 +92,13 @@ void * client_thread_SE(void *data) {
             const char *response = "Successful disconnect!\n";
             send(cdata->csock, response, strlen(response), 0);
             break;
+        } else if(strcmp(buf, "display info se\n") == 0 ) {
+            printf("REQ_INFOSE\n");
+            printf("REQ_INFOSE %d\n", producao);
+            char response[BUFSZ];
+            snprintf(response, BUFSZ, "producao atual: %d kWh\n", producao);
+            size_t response_len = strlen(response);
+            send(cdata->csock, response, response_len, 0);
         } else {
             const char *response = "Received your message!\n";
             send(cdata->csock, response, strlen(response), 0);
@@ -120,6 +150,13 @@ void * client_thread_SCII(void *data) {
             const char *response = "Successful disconnect!\n";
             send(cdata->csock, response, strlen(response), 0);
             break;
+        } else if(strcmp(buf, "display info scii\n") == 0 ) {
+            printf("REQ_INFOSCII\n");
+            printf("REQ_INFOSCII %d%%\n", consumo);
+            char response[BUFSZ];
+            snprintf(response, BUFSZ, "producao atual: %d%% kWh\n", consumo);
+            size_t response_len = strlen(response);
+            send(cdata->csock, response, response_len, 0);
         } else {
             const char *response = "Received your message!\n";
             send(cdata->csock, response, strlen(response), 0);
@@ -141,6 +178,10 @@ int main(int argc, char **argv) {
     if (argc < 3) {
         usage(argc, argv);
     }
+    
+    // Atribuindo dados de Consumo e Producao dos servidores
+    consumo = geraConsumoSCII();
+    producao = geraProducaoSE(); 
 
     struct sockaddr_storage storage;
     if (0 != server_sockaddr_init(argv[1], argv[2], &storage)) {
