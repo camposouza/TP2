@@ -33,7 +33,8 @@ void usage(int argc, char **argv) {
  */
 int geraProducaoSE() {
     srand(time(NULL));
-    return (rand() % 31) + 20;
+    //return (rand() % 31) + 20;
+    return 10;
 }
 
 /**
@@ -44,6 +45,32 @@ int geraProducaoSE() {
 int geraConsumoSCII() {
     srand(time(NULL));
     return (rand() % 101);
+}
+
+/**
+ * @brief Recebe um valor de consumo e o aumenta (ou mantem) aleatoriamente ate um maximo de 100
+ * 
+ * @return int 
+ */
+int aumentaConsumoRandom(int old_consumo){
+    srand(time(NULL));
+    int incremento = rand() % (101 - old_consumo);
+    int new_consumo = incremento + old_consumo;
+    
+    return new_consumo;
+}
+
+/**
+ * @brief Recebe um valor de consumo e o diminiu (ou mantem) aleatoriamente ate um minimo de 0
+ * 
+ * @return int 
+ */
+int diminiuConsumoRandom(int old_consumo) {
+    srand(time(NULL));
+    int decremento = rand() % (old_consumo + 1); // Gera um valor entre 0 e num
+    int new_consumo = old_consumo - decremento;
+    
+    return new_consumo;
 }
 
 struct client_data {
@@ -106,15 +133,15 @@ void * client_thread_SE(void *data) {
             printf("REQ_STATUS\n");
             if(producao >= 41) {
                 memset(response, 0, BUFSZ);
-                snprintf(response, BUFSZ, "estado atual: alta\n");
+                snprintf(response, BUFSZ, "estado atual: alta");
                 send(cdata->csock, response, strlen(response)+1, 0);
             } else if(producao >= 31){
                 memset(response, 0, BUFSZ);
-                snprintf(response, BUFSZ, "estado atual: moderada\n");
+                snprintf(response, BUFSZ, "estado atual: moderada");
                 send(cdata->csock, response, strlen(response)+1, 0);
             } else {
                 memset(response, 0, BUFSZ);
-                snprintf(response, BUFSZ, "estado atual: baixa\n");
+                snprintf(response, BUFSZ, "estado atual: baixa");
                 send(cdata->csock, response, strlen(response)+1, 0);
             }
         } else {
@@ -174,6 +201,7 @@ void * client_thread_SCII(void *data) {
             snprintf(response, BUFSZ, "Successful disconnect\n");
             send(cdata->csock, response, strlen(response)+1, 0);
             break;
+        
         } else if(strcmp(buf, "display info scii\n") == 0 ) {
             printf("REQ_INFOSCII\n");
             printf("REQ_INFOSCII %d%%\n", consumo);
@@ -181,6 +209,34 @@ void * client_thread_SCII(void *data) {
             memset(response, 0, BUFSZ);
             snprintf(response, BUFSZ, "consumo atual: %d%% kWh", consumo);
             send(cdata->csock, response, strlen(response)+1, 0);
+        
+        } else if(strcmp(buf, "REQ_UP") == 0){
+            int old_consumo = consumo;
+            int new_consumo = aumentaConsumoRandom(consumo);
+            consumo = new_consumo;
+            printf("RES_UP %d %d\n", old_consumo, new_consumo);
+
+            memset(response, 0, BUFSZ);
+            snprintf(response, BUFSZ, "RES_UP %d %d", old_consumo, new_consumo);
+            send(cdata->csock, response, strlen(response)+1, 0);
+        
+        } else if(strcmp(buf, "REQ_NONE") == 0) {
+            puts(buf);
+
+            memset(response, 0, BUFSZ);
+            snprintf(response, BUFSZ, "RES_NONE %d ..", consumo ); // Envio de .. para controle
+            send(cdata->csock, response, strlen(response)+1, 0);
+        
+        } else if(strcmp(buf, "REQ_DOWN") == 0) {
+            int old_consumo = consumo;
+            int new_consumo = diminiuConsumoRandom(consumo);
+            consumo = new_consumo;
+            printf("RES_DOWN %d %d\n", old_consumo, new_consumo);
+
+            memset(response, 0, BUFSZ);
+            snprintf(response, BUFSZ, "RES_DOWN %d %d", old_consumo, new_consumo);
+            send(cdata->csock, response, strlen(response)+1, 0);
+
         } else {
             memset(response, 0, BUFSZ);
             snprintf(response, BUFSZ, "Received your message");
