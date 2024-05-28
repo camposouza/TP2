@@ -119,7 +119,7 @@ void * client_thread_SE(void *data) {
         if(strcmp(buf, "kill\n") == 0 ) {
             printf("Servidor SE Client %d removed\n", cdata->client_id);
             memset(response, 0, BUFSZ);
-            snprintf(response, BUFSZ, "Successful disconnect\n");
+            snprintf(response, BUFSZ, "Successful disconnect");
             send(cdata->csock, response, strlen(response)+1, 0);
             break;
         } else if(strcmp(buf, "display info se\n") == 0 ) {
@@ -204,7 +204,7 @@ void * client_thread_SCII(void *data) {
             printf("Servidor SCII Client %d removed\n", cdata->client_id);
 
             memset(response, 0, BUFSZ);
-            snprintf(response, BUFSZ, "Successful disconnect\n");
+            snprintf(response, BUFSZ, "Successful disconnect");
             send(cdata->csock, response, strlen(response)+1, 0);
             break;
         

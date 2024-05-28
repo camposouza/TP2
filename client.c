@@ -184,7 +184,8 @@ int main(int argc, char **argv) {
             break;
         }
 
-		if (strcmp(buf_SE, "Successful disconnect\n") == 0) {
+		if (strcmp(buf_SE, "Successful disconnect") == 0) {
+			printf("Successful disconnect\n");
 			close_SE = true;
 		} else if (strcmp(buf_SE, "estado atual: alta") == 0) {
 			mensagemDummy = true;
@@ -236,7 +237,8 @@ int main(int argc, char **argv) {
 			segunda_terceira_palavra(buf_SCII, old_value, new_value);
 			printf("consumo antigo: %s\nconsumo atual: %s\n", old_value, new_value);
 
-		}  else if (strcmp(buf_SCII, "Successful disconnect\n") == 0) {
+		}  else if (strcmp(buf_SCII, "Successful disconnect") == 0) {
+			printf("Successful disconnect\n");
 			close_SCII = true;
 		} else {
 			puts(buf_SCII);
