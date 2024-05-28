@@ -67,7 +67,8 @@ void * client_thread_SE(void *data) {
 
     /* Mensagem de boas vindas para o cliente */ 
     char msg[BUFSZ];
-    snprintf(msg, BUFSZ, "Servidor SE New ID: %d\n", cdata->client_id);
+    memset(msg, 0, BUFSZ);
+    snprintf(msg, BUFSZ, "Servidor SE New ID: %d", cdata->client_id);
     size_t msg_len = strlen(msg);
     if (send(cdata->csock, msg, msg_len, 0) != msg_len) {
         perror("send");
@@ -87,33 +88,39 @@ void * client_thread_SE(void *data) {
         }
         printf("[msg] %s, %d bytes: %s\n", caddrstr, (int)count, buf);
 
+        char response[BUFSZ];
+        memset(response, 0, BUFSZ);
         if(strcmp(buf, "kill\n") == 0 ) {
             printf("Servidor SE Client %d removed\n", cdata->client_id);
-            const char *response_kill = "Successful disconnect!\n";
-            send(cdata->csock, response_kill, strlen(response_kill), 0);
+            memset(response, 0, BUFSZ);
+            snprintf(response, BUFSZ, "Successful disconnect\n");
+            send(cdata->csock, response, strlen(response)+1, 0);
             break;
         } else if(strcmp(buf, "display info se\n") == 0 ) {
             printf("REQ_INFOSE\n");
             printf("REQ_INFOSE %d\n", producao);
-            char response_info[BUFSZ];
-            snprintf(response_info, BUFSZ, "producao atual: %d kWh\n", producao);
-            size_t response_info_len = strlen(response_info);
-            send(cdata->csock, response_info, response_info_len, 0);
+            memset(response, 0, BUFSZ);
+            snprintf(response, BUFSZ, "producao atual: %d kWh", producao);
+            send(cdata->csock, response, strlen(response)+1, 0);
         }else if(strcmp(buf, "query condition\n") == 0) {
             printf("REQ_STATUS\n");
             if(producao >= 41) {
-                const char *response_status_1 = "estado atual: alta!\n";
-                send(cdata->csock, response_status_1, strlen(response_status_1), 0);
+                memset(response, 0, BUFSZ);
+                snprintf(response, BUFSZ, "estado atual: alta\n");
+                send(cdata->csock, response, strlen(response)+1, 0);
             } else if(producao >= 31){
-                const char *response_status_2 = "estado atual: moderada!\n";
-                send(cdata->csock, response_status_2, strlen(response_status_2), 0);
+                memset(response, 0, BUFSZ);
+                snprintf(response, BUFSZ, "estado atual: moderada\n");
+                send(cdata->csock, response, strlen(response)+1, 0);
             } else {
-                const char *response_status_3 = "estado atual: baixa!\n";
-                send(cdata->csock, response_status_3, strlen(response_status_3), 0);
+                memset(response, 0, BUFSZ);
+                snprintf(response, BUFSZ, "estado atual: baixa\n");
+                send(cdata->csock, response, strlen(response)+1, 0);
             }
         } else {
-            const char *response_other = "Received your message!\n";
-            send(cdata->csock, response_other, strlen(response_other), 0);
+            memset(response, 0, BUFSZ);
+            snprintf(response, BUFSZ, "Received your message");
+            send(cdata->csock, response, strlen(response)+1, 0);
         }
     }
     close(cdata->csock);
@@ -137,7 +144,8 @@ void * client_thread_SCII(void *data) {
 
     /* Mensagem de boas vindas para o cliente */ 
     char msg[BUFSZ];
-    snprintf(msg, BUFSZ, "Servidor SCII New ID: %d\n", cdata->client_id);
+    memset(msg, 0, BUFSZ);
+    snprintf(msg, BUFSZ, "Servidor SCII New ID: %d", cdata->client_id);
     size_t msg_len = strlen(msg);
     if (send(cdata->csock, msg, msg_len, 0) != msg_len) {
         perror("send");
@@ -157,21 +165,26 @@ void * client_thread_SCII(void *data) {
         }
         printf("[msg] %s, %d bytes: %s\n", caddrstr, (int)count, buf);
 
+        char response[BUFSZ];
+        memset(response, 0, BUFSZ);
         if(strcmp(buf, "kill\n") == 0 ) {
             printf("Servidor SCII Client %d removed\n", cdata->client_id);
-            const char *response_kill = "Successful disconnect!\n";
-            send(cdata->csock, response_kill, strlen(response_kill), 0);
+
+            memset(response, 0, BUFSZ);
+            snprintf(response, BUFSZ, "Successful disconnect\n");
+            send(cdata->csock, response, strlen(response)+1, 0);
             break;
         } else if(strcmp(buf, "display info scii\n") == 0 ) {
             printf("REQ_INFOSCII\n");
             printf("REQ_INFOSCII %d%%\n", consumo);
-            char response_info[BUFSZ];
-            snprintf(response_info, BUFSZ, "producao atual: %d%% kWh\n", consumo);
-            size_t response_info_len = strlen(response_info);
-            send(cdata->csock, response_info, response_info_len, 0);
+
+            memset(response, 0, BUFSZ);
+            snprintf(response, BUFSZ, "consumo atual: %d%% kWh", consumo);
+            send(cdata->csock, response, strlen(response)+1, 0);
         } else {
-            const char *response_others = "Received your message!\n";
-            send(cdata->csock, response_others, strlen(response_others), 0);
+            memset(response, 0, BUFSZ);
+            snprintf(response, BUFSZ, "Received your message");
+            send(cdata->csock, response, strlen(response)+1, 0);
         }
     }
     close(cdata->csock);
@@ -238,7 +251,7 @@ int main(int argc, char **argv) {
         pthread_mutex_lock(&client_count_mutex);
         if (client_count >= MAX_CLIENTS) {
             const char *response = "Client limit exceeded\n";
-            send(csock, response, strlen(response), 0);
+            send(csock, response, strlen(response)+1, 0);
             close(csock);
             printf("Client limit exceeded\n");
         } else {

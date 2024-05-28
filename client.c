@@ -89,6 +89,7 @@ int main(int argc, char **argv) {
     while (1) {
 		// Input mensagem
 		char buf[BUFSZ];
+		memset(buf, 0, BUFSZ);
         printf("mensagem> ");
         fgets(buf, BUFSZ - 1, stdin);
 		size_t msg_len = strlen(buf);
@@ -110,9 +111,16 @@ int main(int argc, char **argv) {
             printf("Connection closed by server\n");
             break;
         }
-		if (strcmp(buf_SE, "Successful disconnect!\n") == 0) {
+		
+		if (strcmp(buf_SE, "Successful disconnect\n") == 0) {
 			close_SE = true;
-		} else {
+		} else if (strcmp(buf_SE, "estado atual: alta\n") == 0) {
+			send(s_SCII, "REQ_UP", strlen("REQ_UP"), 0);
+		} else if (strcmp(buf_SE, "estado atual: moderada\n") == 0) {
+			send(s_SCII, "REQ_UP", strlen("REQ_NONE"), 0);
+		}else if (strcmp(buf_SE, "estado atual: baixa\n") == 0) {
+			send(s_SCII, "REQ_UP", strlen("REQ_DOWN"), 0);
+		}else {
 			puts(buf_SE);
 		}
 
@@ -126,7 +134,7 @@ int main(int argc, char **argv) {
             break;
         }
 
-		if (strcmp(buf_SCII, "Successful disconnect!\n") == 0) {
+		if (strcmp(buf_SCII, "Successful disconnect\n") == 0) {
 			close_SCII = true;
 		} else {
 			puts(buf_SCII);
