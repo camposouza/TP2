@@ -129,7 +129,7 @@ void * client_thread_SE(void *data) {
             snprintf(response, BUFSZ, "producao atual: %d kWh", producao);
             send(cdata->csock, response, strlen(response)+1, 0);
 
-        }else if(strcmp(buf, "query condition\n") == 0) {
+        } else if(strcmp(buf, "query condition\n") == 0) {
             printf("REQ_STATUS\n");
             if(producao >= 41) {
                 producao = geraProducaoSE(); // Gera novo valor aleatorio de producao
